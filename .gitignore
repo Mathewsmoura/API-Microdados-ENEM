@@ -1,0 +1,10 @@
+# Pastas
+node_modules/
+dist/
+build/
+
+# Arquivos de log e temporários
+*.log
+.env
+.vscode/
+__pycache__/
