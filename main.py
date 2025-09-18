@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 import pandas as pd
 import json
+from typing import Optional
 
 app = FastAPI(
     title="API Microdados Enem",
@@ -27,8 +28,7 @@ except FileNotFoundError:
     def home():
         return {"message": "Bem-vindo à API de Microdados Enem! Acesse /docs para a documentação interativa."}
     
-    @app.get("/dados_gerais")
-    def get_dados_gerais(ano: int = None):
+    def get_dados_gerais(ano: Optional[int] = None):
         """ 
         Retorna uma amostra dos primeiros 5 registros gerais do ENEM, com filtro opcional por ano.
         """
@@ -62,13 +62,13 @@ except FileNotFoundError:
 
 @app.get("/participantes")
 def get_participantes_com_filtros(
-    idade: int = None,
-    sexo: str = None,
-    cor: str = None,
-    escola: str = None,
-    uf: str = None,
-    min_nota_mt: float = None,
-    max_nota_mt: float = None,
+    idade: Optional[int] = None,
+    sexo: Optional[str] = None,
+    cor: Optional[str] = None,
+    escola: Optional[str] = None,
+    uf: Optional[str] = None,
+    min_nota_mt: Optional[float] = None,
+    max_nota_mt: Optional[float] = None,
     limit: int = 10
 ):
     """
