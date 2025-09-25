@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 import pandas as pd
-import json
 from typing import Optional
 
 app = FastAPI(
@@ -9,54 +8,56 @@ app = FastAPI(
     version="1.0.1",
 )
 
-#Carregar os dados do CSV
+# Carregar os dados do CSV
 try:
-    #Usar um caminho relativo ou absoluto conforme necessário
+    # Usar um caminho relativo ou absoluto conforme necessário
     enem_data = pd.read_csv('caminho/do/arquivo.csv')
     
-    #Padronização dos tipos de coluna (se necessário)
+    # Padronização dos tipos de coluna (se necessário)
     colunas_notas = ['NU_NOTA_CN', 'NU_NOTA_CH', 'NU_NOTA_LC', 'NU_NOTA_MT', 'NU_NOTA_REDACAO']
     for col in colunas_notas:
-        enem_data[col]  = pd.to_numeric(enem_data[col], errors='coerce')
-        
-        enem_data.dropna(subset=colunas_notas, inplace=True)
+        enem_data[col] = pd.to_numeric(enem_data[col], errors='coerce')
+    
+    # Remover linhas com notas nulas (executado apenas uma vez, após o loop)
+    enem_data.dropna(subset=colunas_notas, inplace=True)
         
 except FileNotFoundError:
-    enem_data = pd.DataFrame() #DF vazio em caso de erro
-    
-    @app.get("/")
-    def home():
-        return {"message": "Bem-vindo à API de Microdados Enem! Acesse /docs para a documentação interativa."}
-    
-    def get_dados_gerais(ano: Optional[int] = None):
-        """ 
-        Retorna uma amostra dos primeiros 5 registros gerais do ENEM, com filtro opcional por ano.
-        """
-        if enem_data.empty:
-            raise HTTPException(status_code=404, detail="Dados não carregados. Verifique o caminho do arquivo.")
+    enem_data = pd.DataFrame() # DF vazio em caso de erro
 
-        if ano is not None:
-            dados_filtrados = enem_data[enem_data["NU_ANO"] == ano]
-            if dados_filtrados.empty:
-                raise HTTPException(status_code=404, detail=f"Nenhum dado encontrado para o ano {ano}.")
-            return json.loads(dados_filtrados.head(5).to_json(orient="records"))
+@app.get("/")
+def home():
+    return {"message": "Bem-vindo à API de Microdados Enem! Acesse /docs para a documentação interativa."}
 
-        return json.loads(enem_data.head(5).to_json(orient="records"))
-    
-    @app.get("/dados_por_estado/{estado}")
-    def get_dados_por_estado(estado: str):
-        """
-        Retorna uma amostra dos primeiros 5 registros do ENEM para um estado específico.
-        """
-        if enem_data.empty:
-            raise HTTPException(status_code=404, detail="Dados não carregados. Verifique o caminho do arquivo.")
+@app.get("/dados_gerais")
+def get_dados_gerais(ano: Optional[int] = None):
+    """ 
+    Retorna uma amostra dos primeiros 5 registros gerais do ENEM, com filtro opcional por ano.
+    """
+    if enem_data.empty:
+        raise HTTPException(status_code=404, detail="Dados não carregados. Verifique o caminho do arquivo.")
 
-        dados_filtrados = enem_data[enem_data["SG_UF_RESIDENCIA"] == estado.upper()]
-
+    if ano is not None:
+        dados_filtrados = enem_data[enem_data["NU_ANO"] == ano]
         if dados_filtrados.empty:
-            raise HTTPException(status_code=404, detail=f"Nenhum dado encontrado para o estado '{estado}'.")
+            raise HTTPException(status_code=404, detail=f"Nenhum dado encontrado para o ano {ano}.")
+        return dados_filtrados.head(5).to_dict(orient="records")
 
-        return json.loads(dados_filtrados.head(5).to_json(orient="records"))
+    return enem_data.head(5).to_dict(orient="records")
+
+@app.get("/dados_por_estado/{estado}")
+def get_dados_por_estado(estado: str):
+    """
+    Retorna uma amostra dos primeiros 5 registros do ENEM para um estado específico.
+    """
+    if enem_data.empty:
+        raise HTTPException(status_code=404, detail="Dados não carregados. Verifique o caminho do arquivo.")
+
+    dados_filtrados = enem_data[enem_data["SG_UF_RESIDENCIA"] == estado.upper()]
+
+    if dados_filtrados.empty:
+        raise HTTPException(status_code=404, detail=f"Nenhum dado encontrado para o estado '{estado}'.")
+
+    return dados_filtrados.head(5).to_dict(orient="records")
 
 ### Novas Rotas de Análise e Consulta
 
@@ -119,7 +120,7 @@ def get_participantes_com_filtros(
         raise HTTPException(status_code=404, detail="Nenhum participante encontrado com os filtros aplicados.")
     
     resultados = df_filtrado.head(limit)
-    return json.loads(resultados.to_json(orient="records"))
+    return resultados.to_dict(orient="records")
 
 @app.get("/estatisticas_agregadas")
 def get_estatisticas_agregadas():
