@@ -8,10 +8,31 @@ app = FastAPI(
     version="1.0.1",
 )
 
+# Defina as colunas que sua API realmente utiliza
+colunas_necessarias = [
+    'NU_ANO', 'SG_UF_RESIDENCIA', 'NU_IDADE', 'TP_SEXO', 
+    'TP_COR_RACA', 'TP_ESCOLA', 'NU_NOTA_CN', 'NU_NOTA_CH', 
+    'NU_NOTA_LC', 'NU_NOTA_MT', 'NU_NOTA_REDACAO'
+]
+
+# Defina tipos de dados menores para economizar memória
+tipos_dados = {
+    'NU_ANO': 'int16',
+    'NU_IDADE': 'int8',
+    'TP_SEXO': 'category',
+    'TP_COR_RACA': 'int8',
+    'TP_ESCOLA': 'int8',
+    'SG_UF_RESIDENCIA': 'category'
+}
+
 # Carregar os dados do CSV
 try:
     # Usar um caminho relativo ou absoluto conforme necessário
-    enem_data = pd.read_csv('caminho/do/arquivo.csv')
+    enem_data = pd.read_csv(
+        'caminho/do/arquivo.csv',
+        usecols=colunas_necessarias, # Lê apenas as colunas necessárias
+        dtype=tipos_dados          # Aplica tipos de dados otimizados
+    )
     
     # Padronização dos tipos de coluna (se necessário)
     colunas_notas = ['NU_NOTA_CN', 'NU_NOTA_CH', 'NU_NOTA_LC', 'NU_NOTA_MT', 'NU_NOTA_REDACAO']
