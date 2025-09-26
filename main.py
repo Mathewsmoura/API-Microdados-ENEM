@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, Depends
 import pandas as pd
 from typing import Optional
+from enum import Enum
 
 app = FastAPI(
     title="API Microdados Enem",
     description="Modelo de API para consumir dados sobre o exame nacional do ensino médio.",
-    version="1.0.1",
+    version="1.0.2",
 )
 
 # Defina as colunas que sua API realmente utiliza
@@ -165,8 +166,16 @@ def get_estatisticas_agregadas():
     
     return estatisticas
 
+# 1. Crie um Enum com as opções válidas
+class CaracteristicaDemografica(str, Enum):
+    uf = "SG_UF_RESIDENCIA"
+    sexo = "TP_SEXO"
+    cor_raca = "TP_COR_RACA"
+    idade = "NU_IDADE"
+
+# 2. Use o Enum na sua rota
 @app.get("/distribuicao_demografica/{caracteristica}")
-def get_distribuicao_demografica(caracteristica: str):
+def get_distribuicao_demografica(caracteristica: CaracteristicaDemografica):
     """
     Retorna a contagem de participantes por uma característica demográfica.
     
@@ -175,10 +184,8 @@ def get_distribuicao_demografica(caracteristica: str):
     if enem_data.empty:
         raise HTTPException(status_code=404, detail="Dados não carregados.")
         
-    if caracteristica not in enem_data.columns:
-        raise HTTPException(status_code=400, detail=f"Característica '{caracteristica}' não encontrada nos dados.")
-        
-    distribuicao = enem_data[caracteristica].value_counts().to_dict()
+    # O valor de 'caracteristica' será o valor da string (ex: "SG_UF_RESIDENCIA")
+    distribuicao = enem_data[caracteristica.value].value_counts().to_dict()
     
     return distribuicao
 
