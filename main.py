@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 import pandas as pd
 from typing import Optional
 
@@ -24,25 +24,35 @@ try:
 except FileNotFoundError:
     enem_data = pd.DataFrame() # DF vazio em caso de erro
 
+# 1. Crie a função de dependência
+def get_valid_dataframe() -> pd.DataFrame:
+    if enem_data.empty:
+        raise HTTPException(
+            status_code=503, # Service Unavailable é mais apropriado
+            detail="Os dados do Enem não estão disponíveis no momento."
+        )
+    return enem_data
+
 @app.get("/")
 def home():
     return {"message": "Bem-vindo à API de Microdados Enem! Acesse /docs para a documentação interativa."}
 
 @app.get("/dados_gerais")
-def get_dados_gerais(ano: Optional[int] = None):
+def get_dados_gerais(
+    ano: Optional[int] = None,
+    db: pd.DataFrame = Depends(get_valid_dataframe) # Injeta a dependência
+):
     """ 
     Retorna uma amostra dos primeiros 5 registros gerais do ENEM, com filtro opcional por ano.
     """
-    if enem_data.empty:
-        raise HTTPException(status_code=404, detail="Dados não carregados. Verifique o caminho do arquivo.")
-
+    # Não precisa mais do if! 'db' é o seu dataframe validado.
     if ano is not None:
-        dados_filtrados = enem_data[enem_data["NU_ANO"] == ano]
+        dados_filtrados = db[db["NU_ANO"] == ano]
         if dados_filtrados.empty:
             raise HTTPException(status_code=404, detail=f"Nenhum dado encontrado para o ano {ano}.")
         return dados_filtrados.head(5).to_dict(orient="records")
 
-    return enem_data.head(5).to_dict(orient="records")
+    return db.head(5).to_dict(orient="records")
 
 @app.get("/dados_por_estado/{estado}")
 def get_dados_por_estado(estado: str):
