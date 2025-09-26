@@ -2,7 +2,7 @@
 
 - Modelo de API para consumir dados sobre o exame nacional do ensino médio.
 
-# - Versão 1.0.1
+# - Versão 1.0.2
 
 1 - Pré-processamento de Dados: No primeiro código, os dados eram carregados "brutos". Agora, incluímos um passo de pré-processamento dentro do bloco try...except. Isso garante que as colunas de notas sejam tratadas como números e que linhas com notas ausentes sejam removidas (.dropna()). Isso é crucial para as análises estatísticas.
 
