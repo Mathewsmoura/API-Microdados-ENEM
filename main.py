@@ -9,14 +9,14 @@ app = FastAPI(
     version="1.0.2",
 )
 
-# Defina as colunas que sua API realmente utiliza
+# Define as colunas que a API realmente utiliza
 colunas_necessarias = [
     'NU_ANO', 'SG_UF_RESIDENCIA', 'NU_IDADE', 'TP_SEXO', 
     'TP_COR_RACA', 'TP_ESCOLA', 'NU_NOTA_CN', 'NU_NOTA_CH', 
     'NU_NOTA_LC', 'NU_NOTA_MT', 'NU_NOTA_REDACAO'
 ]
 
-# Defina tipos de dados menores para economizar memória
+# Define tipos de dados menores para economizar memória
 tipos_dados = {
     'NU_ANO': 'int16',
     'NU_IDADE': 'int8',
@@ -46,11 +46,11 @@ try:
 except FileNotFoundError:
     enem_data = pd.DataFrame() # DF vazio em caso de erro
 
-# 1. Crie a função de dependência
+# 1. Cria a função de dependência
 def get_valid_dataframe() -> pd.DataFrame:
     if enem_data.empty:
         raise HTTPException(
-            status_code=503, # Service Unavailable é mais apropriado
+            status_code=503, # Service Unavailable (mais apropriado)
             detail="Os dados do Enem não estão disponíveis no momento."
         )
     return enem_data
@@ -166,14 +166,14 @@ def get_estatisticas_agregadas():
     
     return estatisticas
 
-# 1. Crie um Enum com as opções válidas
+# 1. Cria um Enum com as opções válidas
 class CaracteristicaDemografica(str, Enum):
     uf = "SG_UF_RESIDENCIA"
     sexo = "TP_SEXO"
     cor_raca = "TP_COR_RACA"
     idade = "NU_IDADE"
 
-# 2. Use o Enum na sua rota
+# 2. Usa o Enum na sua rota
 @app.get("/distribuicao_demografica/{caracteristica}")
 def get_distribuicao_demografica(caracteristica: CaracteristicaDemografica):
     """
